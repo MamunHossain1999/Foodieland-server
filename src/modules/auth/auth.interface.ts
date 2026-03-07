@@ -4,8 +4,11 @@ export interface IUser {
   email: string;
   password: string;
   role: "user" | "admin";
+  avatar?: string;
   resetPasswordToken?: string;
   resetPasswordExpire?: Date;
+  otp?: string;                   
+  otpExpire?: Date;
 }
 
 export interface IUserPayload {
