@@ -1,66 +1,163 @@
 import { User } from "./auth.model";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
 import { IUser } from "./auth.interface";
 import { generateToken } from "../../utils/generateToken";
 import { sendEmail } from "../../utils/sendEmail";
 
 
-
+// ----------------------
+// Register User
+// ----------------------
 export const registerUser = async (data: IUser) => {
   const hashedPassword = await bcrypt.hash(data.password, 10);
-  const user = await User.create({ ...data, password: hashedPassword });
-  const token = generateToken({ id: user._id.toString(), role: user.role });
+
+  const user = await User.create({
+    ...data,
+    password: hashedPassword,
+  });
+
+  const token = generateToken({
+    id: user._id.toString(),
+    role: user.role,
+  });
+
   return { user, token };
 };
 
+// ----------------------
+// Login User
+// ----------------------
 export const loginUser = async (email: string, password: string) => {
   const user = await User.findOne({ email });
+
   if (!user) throw new Error("Invalid credentials");
 
   const isMatch = await bcrypt.compare(password, user.password);
+
   if (!isMatch) throw new Error("Invalid credentials");
 
-  const token = generateToken({ id: user._id.toString(), role: user.role });
+  const token = generateToken({
+    id: user._id.toString(),
+    role: user.role,
+  });
+
   return { user, token };
 };
 
-export const forgotPassword = async (email: string) => {
+// ----------------------
+// Send OTP (Forgot Password)
+// ----------------------
+export const forgotPasswordOTP = async (email: string) => {
+  const user = await User.findOne({ email });
+
+  if (!user) throw new Error("User not found");
+
+  // Generate 6 digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  user.otpExpire = new Date(Date.now() + 10 * 60 * 1000);
+  user.otp = otp;
+
+  await user.save();
+
+  const message = `Your OTP for password reset is ${otp}. It expires in 10 minutes`;
+
+  await sendEmail(user.email, "Password Reset OTP", message);
+
+  return {
+    message: "OTP sent to email",
+  };
+};
+
+// ----------------------
+// Reset Password using OTP
+// ----------------------
+export const resetPasswordOTP = async (
+  email: string,
+  otp: string,
+  newPassword: string
+) => {
+  const user = await User.findOne({ email });
+
+  if (!user) throw new Error("User not found");
+
+  if (!user.otp || user.otp !== otp) {
+    throw new Error("Invalid OTP");
+  }
+
+  if (!user.otpExpire || user.otpExpire < new Date()) {
+    throw new Error("OTP expired");
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  user.password = hashedPassword;
+
+  // Clear OTP fields
+  user.otp = undefined;
+  user.otpExpire = undefined;
+
+  await user.save();
+
+  return {
+    message: "Password reset successfully",
+  };
+};
+
+// ----------------------
+// Verify OTP
+// ----------------------
+export const verifyOtp = async (email: string, otp: string) => {
   const user = await User.findOne({ email });
   if (!user) throw new Error("User not found");
 
-  const resetToken = crypto.randomBytes(20).toString("hex");
-  user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
-  user.resetPasswordExpire = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-  await user.save();
+  if (user.otp !== otp || !user.otpExpire || user.otpExpire < new Date()) {
+    throw new Error("Invalid or expired OTP");
+  }
 
-  const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-  await sendEmail(user.email, "Password Reset", `Reset your password: ${resetUrl}`);
+  return { message: "OTP verified successfully", user };
 };
-
-export const resetPassword = async (token: string, newPassword: string) => {
-  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-  const user = await User.findOne({
-    resetPasswordToken: hashedToken,
-    resetPasswordExpire: { $gt: new Date() },
-  });
-  if (!user) throw new Error("Token invalid or expired");
-
-  user.password = await bcrypt.hash(newPassword, 10);
-  user.resetPasswordToken = undefined;
-  user.resetPasswordExpire = undefined;
-  await user.save();
-
-  return user;
-};
-
-export const updateProfile = async (userId: string, data: Partial<IUser>) => {
-  if (data.password) data.password = await bcrypt.hash(data.password, 10);
-  const user = await User.findByIdAndUpdate(userId, data, { new: true });
-  return user;
-};
-export const getUserById = async (userId: string) => {
-  const user = await User.findById(userId).select("-password"); // password exclude
+// ----------------------
+// Resend OTP
+// ----------------------
+export const generateAndSendOtp = async (email: string) => {
+  const user = await User.findOne({ email });
   if (!user) throw new Error("User not found");
+
+  // Generate 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  user.otp = otp;
+  user.otpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 min expiry
+  await user.save();
+
+  const message = `Your OTP for password reset is ${otp}. It expires in 10 minutes.`;
+
+  await sendEmail(user.email, "Password Reset OTP", message);
+
+  return { message: "OTP sent successfully" };
+};
+// ----------------------
+// Update Profile
+// ----------------------
+export const updateProfile = async (userId: string, data: Partial<IUser>) => {
+  if (data.password) {
+    data.password = await bcrypt.hash(data.password, 10);
+  }
+
+  const user = await User.findByIdAndUpdate(userId, data, {
+    new: true,
+  });
+
+  return user;
+};
+
+// ----------------------
+// Get User
+// ----------------------
+export const getUserById = async (userId: string) => {
+  const user = await User.findById(userId).select("-password");
+
+  if (!user) throw new Error("User not found");
+
   return user;
 };
