@@ -25,9 +25,21 @@ export const login = async (req: Request, res: Response) => {
       req.body.password
     );
 
-    res.cookie("token", token, { httpOnly: true });
+    // ✅ Cookie properly set for cross-origin
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // https only
+      sameSite: "none", // cross-site cookie
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
-    res.json(user);
+    // Send minimal user info (avoid password)
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
   } catch (err: any) {
     res.status(401).json({ message: err.message });
   }
