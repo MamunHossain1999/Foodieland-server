@@ -30,5 +30,10 @@ router.post("/resend-otp", validate(resendOtpSchema), authController.resendOtp);
 // User profile
 router.put("/update-profile", protect, validate(updateProfileSchema), authController.updateProfile);
 router.get("/profile", protect, authController.getProfile);
+router.get("/users", protect, authController.getUsers);
+
+// update user role (admin only)
+router.put("/user/:id/role", protect, authController.updateUserRole);
+router.delete("/user/:id", protect, authController.deleteUser);
 
 export default router;
