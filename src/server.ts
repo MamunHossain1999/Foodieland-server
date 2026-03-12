@@ -1,14 +1,8 @@
-import express from "express";
-
 import dotenv from "dotenv";
 import connectDB from "./config/db";
-
+import app from "./app";
 
 dotenv.config();
-
-const app = express();
-app.use(express.json());
-
 
 // 🔹 Start server
 const PORT = process.env.PORT || 5000;
