@@ -1,19 +1,25 @@
-import { Schema, model } from "mongoose";
-import { IProduct } from "./recipes.interface";
+import mongoose from "mongoose";
 
-
-const productSchema = new Schema<IProduct>({
-  name: { type: String, required: true },
-  time: { type: String, required: true },
-  servings: { type: String, required: true },
-  price: { type: Number, required: true },
-  image: { type: String, required: true },
-  description: { type: String, required: true },
-  category: {
-    type: Schema.Types.ObjectId,
-    ref: "Category",
-    required: true,
+const recipeSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    category: {
+      type: String,
+      required: true,
+    },
+    servings: String,
+    time: String,
+    nutrition: String,
+    ingredients: { type: [String], required: true }, // array of strings
+    steps: { type: [String], required: true },  
+    description: String,
+    image: String,
+    price: { type: Number, required: false }, // <-- price added
   },
-});
+  { timestamps: true }
+);
 
-export const Product = model<IProduct>("Product", productSchema);
+export default mongoose.model("Recipe", recipeSchema);
