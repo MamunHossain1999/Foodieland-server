@@ -1,6 +1,7 @@
 
 import { Request, Response } from "express";
 import * as authService from "./auth.service";
+import { User } from "./auth.model";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -115,5 +116,58 @@ export const getProfile = async (req: Request, res: Response) => {
     res.json(user);
   } catch (err: any) {
     res.status(400).json({ message: err.message });
+  }
+};
+
+// Get all users (admin only)
+export const getUsers = async (req: Request, res: Response) => {
+  try {
+    const users = await authService.getAllUsers();
+
+    res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ----------------------
+// Update User Role
+// ----------------------
+export const updateUserRole = async (req: Request, res: Response) => {
+  try {
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const { role } = req.body;
+
+    const updatedUser = await authService.updateUserRole(id, role); // ✅ service method
+    res.status(200).json({ success: true, user: updatedUser });
+  } catch (error: any) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// ----------------------
+// Delete User
+// ----------------------
+export const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
