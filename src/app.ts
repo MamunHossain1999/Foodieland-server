@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
@@ -31,8 +31,8 @@ app.use("/api", orderRoutes);
 app.use("/api", likeRoutes);
 // Serve uploaded images
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
+app.get("/", (req: Request, res: Response) => {
+  res.send("FoodieLand Server Running 🚀");
 });
 
 // Profile picture upload
