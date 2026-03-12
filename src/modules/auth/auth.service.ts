@@ -161,3 +161,36 @@ export const getUserById = async (userId: string) => {
 
   return user;
 };
+// ----------------------
+// Get All Users
+// ----------------------
+export const getAllUsers = async () => {
+  const users = await User.find().select("-password");
+
+  return users;
+};
+
+
+
+// ----------------------
+// Update User Role
+// ----------------------
+export const updateUserRole = async (id: string, role: string) => {
+  const user = await User.findByIdAndUpdate(
+    id,
+    { role },
+    { new: true }
+  ).select("-password");
+  if (!user) throw new Error("User not found");
+  return user;
+};
+
+
+// ----------------------
+// Delete User
+// ----------------------
+export const deleteUser = async (id: string) => {
+  const user = await User.findByIdAndDelete(id);
+  if (!user) throw new Error("User not found");
+  return user;
+};
