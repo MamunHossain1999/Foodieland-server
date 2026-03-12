@@ -1,43 +1,43 @@
-import { Request, Response } from "express";
-import { Category } from "./categories.model";
-import { Product } from "../Recipes/recipes.model";
+// import { Request, Response } from "express";
+// import { Category } from "./categories.model";
 
 
-// Create Category
-export const createCategory = async (req: Request, res: Response) => {
-  const result = await Category.create(req.body);
-  res.status(201).json(result);
-};
 
-// Get All Categories
-export const getCategories = async (req: Request, res: Response) => {
-  const result = await Category.find();
-  res.json(result);
-};
+// // Create Category
+// export const createCategory = async (req: Request, res: Response) => {
+//   const result = await Category.create(req.body);
+//   res.status(201).json(result);
+// };
 
-// Category Details + Products
-export const getCategoryDetails = async (req: Request, res: Response) => {
-  const { id } = req.params;
+// // Get All Categories
+// export const getCategories = async (req: Request, res: Response) => {
+//   const result = await Category.find();
+//   res.json(result);
+// };
 
-  const category = await Category.findById(id);
-  const products = await Product.find({ category: id });
+// // Category Details + Products
+// export const getCategoryDetails = async (req: Request, res: Response) => {
+//   const { id } = req.params;
 
-  res.json({
-    category,
-    products,
-  });
-};
+//   const category = await Category.findById(id);
+//   const products = await category.find({ category: id });
 
-// Delete Category
-export const deleteCategory = async (req: Request, res: Response) => {
-  const { id } = req.params;
+//   res.json({
+//     category,
+//     products,
+//   });
+// };
 
-  await Product.deleteMany({ category: id });
+// // Delete Category
+// export const deleteCategory = async (req: Request, res: Response) => {
+//   const { id } = req.params;
 
-  const result = await Category.findByIdAndDelete(id);
+//   await Product.deleteMany({ category: id });
 
-  res.json({
-    message: "Category deleted successfully",
-    result,
-  });
-};
+//   const result = await Category.findByIdAndDelete(id);
+
+//   res.json({
+//     message: "Category deleted successfully",
+//     result,
+//   });
+// };
