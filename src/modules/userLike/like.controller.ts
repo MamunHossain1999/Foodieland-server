@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import { LikeModel } from "./like.model";
+import connectDB from "../../config/db";
 
 // ==================== TOGGLE LIKE ====================
 export const toggleLike = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const { recipeId } = req.body as { recipeId: string };
     const userId = req.user.id;
 
@@ -29,6 +31,7 @@ export const toggleLike = async (req: Request, res: Response) => {
 // ==================== GET LIKE COUNT ====================
 export const getLikeCount = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const { recipeId } = req.params;
 
     if (!recipeId) {
@@ -47,6 +50,7 @@ export const getLikeCount = async (req: Request, res: Response) => {
 // ==================== CHECK IF USER ALREADY LIKED ====================
 export const checkUserLiked = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const { recipeId } = req.params;
     const userId = req.user.id;
 

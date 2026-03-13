@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import { OrderModel } from "./order.model";
+import connectDB from "../../config/db";
 
 // ====================== CREATE ORDER ======================
 export const createOrder = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const { recipeId } = req.body as { recipeId: string };
     const userId = req.user.id;
 
@@ -32,6 +34,7 @@ export const createOrder = async (req: Request, res: Response) => {
 // ====================== GET USER ORDER HISTORY ======================
 export const getOrderHistory = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const userId = req.user.id;
 
     const orders = await OrderModel.find({ userId })
@@ -49,6 +52,7 @@ export const getOrderHistory = async (req: Request, res: Response) => {
 // ====================== DELETE ORDER ======================
 export const deleteOrder = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const { orderId } = req.params;
     const userId = req.user.id;
 
@@ -70,6 +74,7 @@ export const deleteOrder = async (req: Request, res: Response) => {
 // ====================== GET SINGLE ORDER (OPTIONAL) ======================
 export const getSingleOrder = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const { orderId } = req.params;
     const userId = req.user.id;
 
@@ -88,6 +93,7 @@ export const getSingleOrder = async (req: Request, res: Response) => {
 
 export const updateOrderStatus = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const { orderId } = req.params;
     const { status } = req.body as { status: "Pending" | "Delivered" | "Cancelled" };
 

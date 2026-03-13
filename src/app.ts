@@ -19,7 +19,7 @@ import likeRoutes from "./modules/userLike/like.route";
 dotenv.config();
 const app = express();
 
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors({ origin:["https://steady-melba-f093fa.netlify.app", "http://localhost:5173"], credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));

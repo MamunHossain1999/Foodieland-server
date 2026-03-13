@@ -1,10 +1,11 @@
-
 import { Request, Response } from "express";
 import * as authService from "./auth.service";
 import { User } from "./auth.model";
+import connectDB from "../../config/db";
 
 export const register = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const { user, token } = await authService.registerUser(req.body);
 
     res.cookie("token", token, { httpOnly: true });
@@ -20,26 +21,21 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const { user, token } = await authService.loginUser(
       req.body.email,
-      req.body.password
+      req.body.password,
     );
 
-    // ✅ Cookie properly set for cross-origin
+    // res.cookie("token", token, { httpOnly: true });
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // https only
-      sameSite: "none", // cross-site cookie
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      secure: process.env.NODE_ENV === "production", // only HTTPS in prod
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // Send minimal user info (avoid password)
-    res.json({
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    });
+    res.json(user);
   } catch (err: any) {
     res.status(401).json({ message: err.message });
   }
@@ -50,10 +46,10 @@ export const logout = (req: Request, res: Response) => {
   res.json({ message: "Logged out" });
 };
 
-
 // VERIFY OTP
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const { email, otp } = req.body;
 
     const user = await authService.verifyOtp(email, otp);
@@ -67,23 +63,25 @@ export const verifyOtp = async (req: Request, res: Response) => {
   }
 };
 
-
 // RESEND OTP
 export const resendOtp = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const { email } = req.body;
     if (!email) return res.status(400).json({ message: "Email is required" });
 
     const result = await authService.generateAndSendOtp(email);
     return res.json(result);
   } catch (err: any) {
-    return res.status(500).json({ message: err.message || "Something went wrong" });
+    return res
+      .status(500)
+      .json({ message: err.message || "Something went wrong" });
   }
 };
 
-
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     await authService.forgotPasswordOTP(req.body.email);
     res.json({ message: "Email sent" });
   } catch (err: any) {
@@ -93,14 +91,10 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
 export const resetPassword = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const { email, otp, newPassword } = req.body;
-    
 
-    const user = await authService.resetPasswordOTP(
-      email,
-      otp,
-      newPassword
-    );
+    const user = await authService.resetPasswordOTP(email, otp, newPassword);
 
     res.json(user);
   } catch (err: any) {
@@ -110,6 +104,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 
 export const updateProfile = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const user = await authService.updateProfile(req.user!.id, req.body);
     res.json(user);
   } catch (err: any) {
@@ -117,10 +112,10 @@ export const updateProfile = async (req: Request, res: Response) => {
   }
 };
 
-
 // Get current logged-in user
 export const getProfile = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
     const user = await authService.getUserById(req.user.id);
@@ -134,6 +129,7 @@ export const getProfile = async (req: Request, res: Response) => {
 // Get all users (admin only)
 export const getUsers = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const users = await authService.getAllUsers();
 
     res.status(200).json({
@@ -153,6 +149,7 @@ export const getUsers = async (req: Request, res: Response) => {
 // ----------------------
 export const updateUserRole = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { role } = req.body;
 
@@ -168,6 +165,7 @@ export const updateUserRole = async (req: Request, res: Response) => {
 // ----------------------
 export const deleteUser = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const { id } = req.params;
 
     const user = await User.findByIdAndDelete(id);

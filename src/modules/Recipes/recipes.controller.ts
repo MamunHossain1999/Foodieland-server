@@ -1,11 +1,14 @@
 import { Request, Response } from "express";
 import recipesModel from "./recipes.model";
 
+import connectDB from "../../config/db";
+
 
 
 // Get All Recipes
 export const getAllRecipes = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const page = parseInt(req.query.page as string) || 1;  // default page 1
     const limit = parseInt(req.query.limit as string) || 8; // default 8 per page
     const skip = (page - 1) * limit;
@@ -27,6 +30,8 @@ export const getAllRecipes = async (req: Request, res: Response) => {
 // Get Recipe Details by ID
 export const getRecipeDetails = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
+
     const recipe = await recipesModel.findById(req.params.id);
     if (!recipe) return res.status(404).json({ message: "Recipe not found" });
     res.status(200).json({ success: true, recipe });
@@ -38,6 +43,8 @@ export const getRecipeDetails = async (req: Request, res: Response) => {
 // Update Recipe
 export const updateRecipe = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
+
     const { title, category, nutrition, ingredients, steps, description, price } = req.body;
     const image = req.file?.filename;
 
@@ -65,6 +72,7 @@ export const updateRecipe = async (req: Request, res: Response) => {
 // Delete Recipe
 export const deleteRecipe = async (req: Request, res: Response) => {
   try {
+    await connectDB(); // Ensure DB connection before querying
     const recipe = await recipesModel.findById(req.params.id);
     if (!recipe) return res.status(404).json({ message: "Recipe not found" });
 
